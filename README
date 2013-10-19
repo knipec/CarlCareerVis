@@ -1,0 +1,51 @@
+
+CARLETON COLLEGE CAREER PATHS VISUALIZATION
+Put together by Carissa Knipe
+carissaknipe@gmail.com
+---------------------------------------------
+
+What to do when you get new data...
+
+
+****************  formatData.py  ****************
+This takes the original excel file (named "newData.xlsx") with the data and outputs a json file (named "data.json") so the javascript can read it. Majors are also grouped into a smaller number of categories and careers to "Unknown" are not included.
+
+1. If you haven't already, install the xlrd python module:
+	- Open Terminal or Command Line
+	- Type the following:
+			cd path-to-this-folder
+			cd xlrd-0.9.2	
+			python setup.py install
+	- Hopefully that should work. Otherwise the README in the xlrd folder might help. 
+
+2. Open formatData.py in a text editor
+
+3. At the top, if the organization of the excel file has changed, change the dataSource, sheetIndex, etc. accordingly.
+
+4. At the bottom, in the getMajor function:
+	- If there are new listed majors that should be on the diagram, add them to the validMajorsList
+	- If there are new listed majors that should be considered a different major, add another statement of the following form:
+	elif (major == "New listed major"): 
+		majorCategories.append("Different major")
+
+5. It should print to the Terminal or Command Line the names of all the listed majors that have been discared. Make sure you wanted all of these to be discarded.
+*************************************************
+
+
+
+*****************  index.html  ******************
+- If a new major category has been added, edit the file. Go to where it says var majorDescriptions = {...} and add the new major category, even if there is no text to display. The format is 
+	"Major category name" : "Description"
+Or if a new listed major is put under an existing category, add it to the description for that category.
+
+- Fun fact: As written, it only works on a server and won't work if you try to run it locally from the directory it's in on your computer. So index-local.html is included in case you want to run stuff offline. Search for the word "offline" in the text of index-local.html and you can see which lines are different.
+*************************************************
+
+
+
+**************** files to upload ****************
+data.json
+index.html
+sankey.js
+style.css
+*************************************************

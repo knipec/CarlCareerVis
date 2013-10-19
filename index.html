@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Carleton Career Paths</title>
+<style>
+
+@import url(style.css);
+
+#chart {
+  height: 1000px;
+}
+
+.node rect {
+  cursor: pointer;
+  fill-opacity: .4;
+  shape-rendering: crispEdges;
+}
+
+.node:hover rect {
+  fill-opacity: 0.9;
+}
+
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.link {
+  fill: none;
+  stroke-opacity: .3;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+
+</style>
+<body>
+
+<h1>Carleton College Career Paths</h1>
+
+<h3>Majors on left, job fields on right. Click on a major or career to see only its paths. Click on a path to see more specific careers.</h3>
+
+<p id="chart">
+
+<p id="description">
+
+<footer>Note: This graphic does not account for the career paths of alumni who have not provided this data to the College. We are including all career paths we have information about, even when a single individual has moved among two or more fields over the years since they graduated (they will show up twice). Special majors are not included.
+</footer>
+
+
+<footer>
+  Many thanks to <a href="http://bost.ocks.org/mike" rel="author">Mike Bostock</a>, creator of <a href="http://d3js.org">D3</a> and its <a href="https://github.com/d3/d3-plugins/tree/master/sankey">Sankey plugin</a>.
+  <aside>August, 2013</aside>
+</footer>
+
+<script src="http://d3js.org/d3.v2.min.js?2.9.1"></script>
+<script src="sankey.js"></script>
+<script>
+
+var majorDescriptions = {
+"Area Studies" : "Includes majors: African/African-American Studies, American Studies, Asian Studies, Latin American Studies",
+"Art/Art History" : "Includes Studio Art and Art History",
+"Biology" : "",
+"Chemistry" : "",
+"Cinema and Media Studies" : "",
+"Classics" : "Includes Classics and Classical Languages",
+"Computer Science" : "",
+"Economics" : "",
+"English" : "",
+"Environmental Studies" : "",
+"Geology" : "",
+"History" : "",
+"Linguistics" : "",
+"Mathematics" : "",
+"Modern Languages" : "Includes majors: French, German, Russian, Spanish",
+"Music" : "",
+"Philosophy" : "",
+"Physics" : "",
+"Political Science" : "Includes Political Science and International Relations",
+"Psychology" : "",
+"Religion" : "",
+"Sociology/Anthropology" : "",
+"Theater/Dance" : "Includes Dance and Theater Arts",
+"Women's and Gender Studies" : ""
+}
+
+var VIEW_ENTIRE = 0,
+    VIEW_MAJOR = 1,
+    VIEW_CAREER = 2;
+    VIEW_SPECIFIC = 3;
+var view = VIEW_ENTIRE;
+
+var margin = {top: 1, right: 1, bottom: 6, left: 1},
+    width = 960 - margin.left - margin.right,
+    height = 1000 - margin.top - margin.bottom;
+
+var formatNumber = d3.format(",.0f"),
+    format = function(d) { return formatNumber(d) + " Students"; },
+    color = d3.scale.category20();
+
+var chart = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+var svg = chart.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var sankey = d3.sankey()
+    .nodeWidth(15)
+    .nodePadding(10)
+    .size([width, height]);
+
+var path = sankey.link();
+
+d3.json("data.json", function(allData) {
+
+  var currentData = allData[0];
+
+  drawNewSankey(0);
+
+
+  function eraseSankey() {
+    d3.selectAll(".link").remove();
+    d3.selectAll(".node").remove();
+  }
+
+  function drawOneCareer(node) {
+    view = VIEW_CAREER;
+    window.scroll(0,0);
+
+    // Changes the space alloted
+    var newHeight = 30;
+    var elem = document.getElementById("chart");
+    elem.style.height = newHeight + "px";    
+
+    // Reset data
+    currentData = {"nodes":[], "links":[]};
+    var targetLinks = d3.select(node).datum().targetLinks;
+    currentData.nodes.push(targetLinks[0].target);
+    targetLinks.forEach(function(link) {
+      currentData.links.push(link);
+      currentData.nodes.push(link.source);
+    });
+
+
+    // Delete the previously drawn diagram
+    eraseSankey();
+
+    // Reset the dimensions
+    sankey
+      .size([width, newHeight - margin.top - margin.bottom]);
+
+    drawNewSankey(10);
+
+    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the career to go back to the full view.");
+  }
+
+  function drawOneMajor(node) {
+    view = VIEW_MAJOR;
+    window.scroll(0,0);
+
+    // Changes the space alloted
+    var newHeight = 300;
+    var elem = document.getElementById("chart");
+    elem.style.height = newHeight + "px";    
+
+    // Reset data, so that it always draws the same thing no matter which view you got there from 
+    currentData = {"nodes":[], "links":[]};
+    var nodeName = d3.select(node).datum().name;
+    var newNode;
+    eraseSankey();
+    sankey
+      .nodes(allData[0].nodes)
+      .links(allData[0].links)
+      .layout(0);
+    sankey.nodes().forEach(function(node) {
+      if (node.name == nodeName) {
+        newNode = node;
+      }
+    });
+    var sourceLinks = newNode.sourceLinks;
+    currentData.nodes.push(sourceLinks[0].source);
+    sourceLinks.forEach(function(link) {
+      currentData.links.push(link);
+      currentData.nodes.push(link.target);
+    });
+
+
+    // Delete the previously drawn diagram
+    eraseSankey();
+
+    // Reset the dimensions
+    sankey
+      .size([width, newHeight - margin.top - margin.bottom]);
+
+    drawNewSankey(10);
+
+    // Add text about which majors fall under this category
+    var majorText = majorDescriptions[d3.select(node).datum().name]
+    document.getElementById("description").innerHTML = majorText;
+
+    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the major to go back to the full view.");
+
+  }
+
+  function drawMajorToSpecifics(link) {
+    view = VIEW_SPECIFIC;
+    window.scroll(0,0);
+    var newHeight = 300;
+
+    currentData = allData[d3.select(link).datum().index];
+
+    eraseSankey();
+    sankey
+      .size([width, newHeight - margin.top - margin.bottom]);
+
+    drawNewSankey(10);
+
+    var majorText = majorDescriptions[d3.select(link).datum().source.name]
+    var majorName = 
+    document.getElementById("description").innerHTML = majorText;
+    d3.select("body").select("h3").text("Majors on left, job fields (under " + d3.select(link).datum().target.name + ") on right. Click on the major to see all its broad career paths.");
+  }
+
+  function drawEntire() {
+    view = VIEW_ENTIRE;
+    window.scroll(0,0);
+
+    eraseSankey();
+
+    currentData = allData[0];
+
+    sankey
+      .size([width, height])
+
+    drawNewSankey(0);
+
+    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a major or career to see only its paths. Click on a path to see more specific careers.");
+  }
+
+  // Should be called after the previous sankey has been erased and after currentData has been updated. 
+  function drawNewSankey(layoutAmount) {
+    sankey
+      .nodes(currentData.nodes)
+      .links(currentData.links);
+      
+    // Increase the height of the graphic if need be
+    var newHeight = sankey.layoutTest(1);
+    var elem = document.getElementById("chart");
+    elem.style.height = newHeight + "px"; 
+    sankey
+      .size([width, newHeight])
+      .layout(layoutAmount);
+    chart.attr("height", newHeight + margin.top + margin.bottom);
+
+    var link = svg.append("g").selectAll(".link")
+        .data(currentData.links)
+      .enter().append("path")
+        .attr("class", "link")
+        .attr("d", path)
+        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+        .style("stroke", function(d) { return d.color = color(d.source.name.replace(/ .*/, "")); })
+
+        .sort(function(a, b) { return b.dy - a.dy; })
+
+    link.append("title")
+        .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+
+    var node = svg.append("g").selectAll(".node")
+        .data(currentData.nodes)
+      .enter().append("g")
+        .attr("class", "node")
+        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+
+
+    node.append("rect")
+        .attr("height", function(d) { return d.dy; })
+        .attr("width", sankey.nodeWidth())
+        .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
+        .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+      .append("title")
+        .text(function(d) { return d.name + "\n" + format(d.value); });
+
+    node.append("text")
+        .attr("x", -6)
+        .attr("y", function(d) { return d.dy / 2; })
+        .attr("dy", ".35em")
+        .attr("text-anchor", "end")
+        .attr("transform", null)
+        .text(function(d) { return d.name; })
+      .filter(function(d) { return d.x < width / 2; })
+        .attr("x", 6 + sankey.nodeWidth())
+        .attr("text-anchor", "start");
+
+    node  
+      .on("click", function() {
+        if (view == VIEW_ENTIRE) {
+          // Left node
+          if (d3.select(this).datum().x == 0) {
+            drawOneMajor(this);
+          }
+          // Right node
+          else {
+            drawOneCareer(this);
+          }
+        }
+        else if (view == VIEW_MAJOR) {
+          if (d3.select(this).datum().x == 0) {
+            drawEntire();
+          }
+        }
+        else if (view == VIEW_CAREER) {
+          if (d3.select(this).datum().x != 0) {
+            drawEntire();
+          }
+        }
+        else if (view == VIEW_SPECIFIC) {
+          if (d3.select(this).datum().x == 0) {
+            drawOneMajor(this);
+          }
+        }
+
+      })
+
+    link
+      .on("click", function() {
+        if (view != VIEW_SPECIFIC) {
+          drawMajorToSpecifics(this);
+        }
+      })
+
+    document.getElementById("description").innerHTML="";
+  }
+
+  document.onkeydown = function(event) {
+    event = event || window.event;
+    var keycode = event.charCode || event.keyCode;
+    if (keycode == 8 || keycode == 46) {
+      drawEntire();
+      return false;
+    }
+  }
+});
+</script>
