@@ -37,8 +37,6 @@ This takes the original excel file (named "newData.xlsx") with the data and outp
 - If a new major category has been added, edit the file. Go to where it says var majorDescriptions = {...} and add the new major category, even if there is no text to display. The format is 
 	"Major category name" : "Description"
 Or if a new listed major is put under an existing category, add it to the description for that category.
-
-- Fun fact: As written, it only works on a server and won't work if you try to run it locally from the directory it's in on your computer. So index-local.html is included in case you want to run stuff offline. Search for the word "offline" in the text of index-local.html and you can see which lines are different.
 *************************************************
 
 
