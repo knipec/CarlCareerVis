@@ -35,12 +35,12 @@ def main() :
 	dataStartingRow = 13
 # -----------------------------------------------------
 
-	writeDataTo = "data.json"
+	writeDataTo = "TESTINGdata.json"
 	workbook = open_workbook(dataSource)
 	sheet = workbook.sheet_by_index(sheetIndex)
 
 	# Entry looks like 
-	# {"name_of_major_or_career" : node_number}
+	# {"name_of_major_or_career" + "-m" or "-c" : node_number}
 	nodeDict = ordered_dict()
 
 	# Entry looks like
@@ -54,7 +54,7 @@ def main() :
 		majors = getMajor(sheet.cell_value(row, majorCol))
 		broadCareerName = sheet.cell_value(row, broadCareerCol)
 		specificCareerName = sheet.cell_value(row, specificCareerCol)
-		if (row < dataStartingRow or broadCareerName == "Unknown"):
+		if (row < dataStartingRow or broadCareerName == ""):
 			continue
 		if (len(majors) < 1):
 			discardedDict[sheet.cell_value(row, majorCol)] = 1
@@ -62,9 +62,9 @@ def main() :
 
 		for majorIndex in range(len(majors)):
 			majorName = majors[majorIndex]
-			nodeIndex = addNode(nodeDict, majorName, nodeIndex)
-			nodeIndex = addNode(nodeDict, broadCareerName, nodeIndex)
-			addLink(linkDict, nodeDict, majorName, broadCareerName, specificCareerName)
+			nodeIndex = addNode(nodeDict, majorName+"-m", nodeIndex)
+			nodeIndex = addNode(nodeDict, broadCareerName+"-c", nodeIndex)
+			addLink(linkDict, nodeDict, majorName+"-m", broadCareerName+"-c", specificCareerName)
 
 
 	# Sort alphabetically
@@ -74,7 +74,12 @@ def main() :
 	for major in discardedDict.sort_by_key().order():
 		print major
 
+	print "-------------------"
 	createJSON(sortedNodes, sortedLinks, writeDataTo)
+	print "INCLUDED MAJORS: "
+	for major in nodeDict.sort_by_key().order():
+		if major[-1] == "m":
+			print major[:-2]
 
 	print "Done! %d rows" , sheet.nrows
 
@@ -106,6 +111,7 @@ def addLink(linkDict, nodeDict, majorName, careerName, specificCareerName = ""):
 		linkDict[link][0] += 1
 
 	specificDict = linkDict[link][1]
+	specificCareerName += "-c"
 	if (specificCareerName == ""):
 		pass
 	elif (specificCareerName not in specificDict):
@@ -121,8 +127,10 @@ def createJSON(nodes, links, fileName):
 	# Writing the data for majors --> broadCareers
 	f.write("\n{\"nodes\":[\n")
 	stringToWrite = ""
+	index = 0
 	for nodeName in nodes.order():
-		stringToWrite += "{\"name\":\"" + nodeName + "\"},\n"
+		stringToWrite += "{\"name\":\"" + nodeName[:-2] + "\",\"index\":" + str(index) + "},\n"
+		index += 1
 	f.write(stringToWrite[:-2])
 
 	f.write("\n],\n\"links\":[\n")
@@ -154,7 +162,7 @@ def createJSON(nodes, links, fileName):
 		stringToWrite = ""
 		f.write(",\n{\"nodes\":[\n")
 		for newNode in newNodeDict.order():
-			stringToWrite += "{\"name\":\"" + newNode + "\"},\n"
+			stringToWrite += "{\"name\":\"" + newNode[:-2] + "\"},\n"
 		f.write(stringToWrite[:-2])
 
 		stringToWrite = ""
@@ -168,6 +176,7 @@ def createJSON(nodes, links, fileName):
 
 	f.write("]")
 	f.close()
+
 
 class ordered_dict(dict):
     def __init__(self, *args, **kwargs):
@@ -205,9 +214,9 @@ class ordered_dict(dict):
 
 # Puts the listed majors into the decided upon major categories
 def getMajor(major):
-	validMajorsList = ["Area Studies","Art/Art History","Biology","Chemistry","Cinema and Media Studies","Classics","Computer Science","Economics","English","Environmental Studies","Geology","History","Linguistics","Mathematics","Modern Languages","Music","Philosophy","Physics","Political Science","Psychology","Religion","Sociology/Anthropology","Theater/Dance","Women's and Gender Studies"]
-
 	majorCategories = []
+
+	validMajorsList = ["Area Studies","Art/Art History","Biology","Chemistry","Cinema and Media Studies","Classics","Computer Science","Economics","English","Environmental Studies","Geology","History","Linguistics","Mathematics","Modern Languages","Music","Philosophy","Physics","Political Science","Psychology","Religion","Sociology/Anthropology","Theater/Dance","Women's and Gender Studies"]
 
 	if (major == "Biology-Geology"):
 		majorCategories.append("Biology")
