@@ -42,9 +42,11 @@
 
 <h3>Majors on left, job fields on right. Click on a major or career to see only its paths. Click on a path to see more specific careers.</h3>
 
+<p id="careerLink">
+
 <p id="chart">
 
-<p id="description">
+<p id="majorDescription">
 
 <footer>Note: This graphic does not account for the career paths of alumni who have not provided this data to the College. We are including all career paths we have information about, even when a single individual has moved among two or more fields over the years since they graduated (they will show up twice). Special majors are not included.
 </footer>
@@ -59,31 +61,30 @@
 <script src="sankey.js"></script>
 <script>
 
+var careerLinks = {
+  "Arts/Museums" : "https://apps.carleton.edu/pathways/arts_communication/",
+  "Business/Finance/Sales: https://apps.carleton.edu/pathways/businesses/",
+  "Communications/Media" : "https://apps.carleton.edu/pathways/arts_communication/",
+  "Education (Higher Ed)" : "https://apps.carleton.edu/pathways/education/higher_education/",
+  "Education (Pre K-12)" : "https://apps.carleton.edu/pathways/education/k_12_education/",
+  "Engineering" : "https://apps.carleton.edu/pathways/engineering/engineering_technology/",
+  "Environment/Agriculture" : "https://apps.carleton.edu/pathways/environment/",
+  "Government/Public Service" : "https://apps.carleton.edu/pathways/government_law_activism/government_politics_public_policy/",
+  "Healthcare" : "https://apps.carleton.edu/pathways/health_wellness/health_professions/",
+  "Info Systems/Technology/Library" : ["https://apps.carleton.edu/pathways/engineering/computers_and_information_systems/", "https://apps.carleton.edu/pathways/education/library_science/"],
+  "Legal Professions" : "https://apps.carleton.edu/pathways/government_law_activism/law_justice/",
+  "Peace Corps/AmeriCorps/Teach for America" : "https://apps.carleton.edu/pathways/government_law_activism/advocacy_activism_humanrights/",
+  "Science/Lab Research" : "https://apps.carleton.edu/pathways/health_wellness/health_professions/",
+  "Social Service/Advocacy" : "https://apps.carleton.edu/pathways/health_wellness/counseling_socialservices/"
+  }
+
 var majorDescriptions = {
 "Area Studies" : "Includes majors: African/African-American Studies, American Studies, Asian Studies, Latin American Studies",
 "Art/Art History" : "Includes Studio Art and Art History",
-"Biology" : "",
-"Chemistry" : "",
-"Cinema and Media Studies" : "",
 "Classics" : "Includes Classics and Classical Languages",
-"Computer Science" : "",
-"Economics" : "",
-"English" : "",
-"Environmental Studies" : "",
-"Geology" : "",
-"History" : "",
-"Linguistics" : "",
-"Mathematics" : "",
 "Modern Languages" : "Includes majors: French, German, Russian, Spanish",
-"Music" : "",
-"Philosophy" : "",
-"Physics" : "",
 "Political Science" : "Includes Political Science and International Relations",
-"Psychology" : "",
-"Religion" : "",
-"Sociology/Anthropology" : "",
 "Theater/Dance" : "Includes Dance and Theater Arts",
-"Women's and Gender Studies" : ""
 }
 
 var VIEW_ENTIRE = 0,
@@ -115,10 +116,7 @@ var path = sankey.link();
 
 d3.json("data.json", function(allData) {
 
-  var currentData = allData[0];
-
-  drawNewSankey(0);
-
+  drawEntire();
 
   function eraseSankey() {
     d3.selectAll(".link").remove();
@@ -153,7 +151,16 @@ d3.json("data.json", function(allData) {
 
     drawNewSankey(10);
 
-    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the career to go back to the full view.");
+    var careerLink = careerLinks[d3.select(node).datum().name]
+    if (careerLink == undefined) {
+      document.getElementById("careerLink").innerHTML = "";
+    }
+    else {
+      document.getElementById("careerLink").innerHTML = "<a href=\"" + careerLink + "\">Link to " + d3.select(node).datum().name + " on Pathways site</a>";
+    }
+
+
+    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the career or press backspace to go back to the full view.");
   }
 
   function drawOneMajor(node) {
@@ -198,9 +205,12 @@ d3.json("data.json", function(allData) {
 
     // Add text about which majors fall under this category
     var majorText = majorDescriptions[d3.select(node).datum().name]
-    document.getElementById("description").innerHTML = majorText;
+    if (majorText == undefined) {
+      majorText = ""
+    }
+    document.getElementById("majorDescription").innerHTML = majorText;
 
-    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the major to go back to the full view.");
+    d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the major or press backspace to go back to the full view.");
 
   }
 
@@ -218,9 +228,20 @@ d3.json("data.json", function(allData) {
     drawNewSankey(10);
 
     var majorText = majorDescriptions[d3.select(link).datum().source.name]
-    var majorName = 
-    document.getElementById("description").innerHTML = majorText;
-    d3.select("body").select("h3").text("Majors on left, job fields (under " + d3.select(link).datum().target.name + ") on right. Click on the major to see all its broad career paths.");
+    if (majorText == undefined) {
+      majorText = ""
+    }
+    document.getElementById("majorDescription").innerHTML = majorText;
+
+    var careerLink = careerLinks[d3.select(link).datum().target.name]
+    if (careerLink == undefined) {
+      document.getElementById("careerLink").innerHTML = "";
+    }
+    else {
+      document.getElementById("careerLink").innerHTML = "<a href=\"" + careerLink + "\">Link to " + d3.select(link).datum().target.name + " on Pathways site</a>";
+    }
+
+    d3.select("body").select("h3").text("Majors on left, job fields (under " + d3.select(link).datum().target.name + ") on right. Click on the major to see all its broad career paths. Press backspace to go to the full view.");
   }
 
   function drawEntire() {
@@ -237,6 +258,24 @@ d3.json("data.json", function(allData) {
     drawNewSankey(0);
 
     d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a major or career to see only its paths. Click on a path to see more specific careers.");
+
+  }
+
+  function drawCareerResources() {
+    sankey.nodes().forEach(function(node) {
+      if (node.x != 0 && careerLinks[node.name] != undefined) {
+        // Career nodes
+        var imgWidth = 20, imgHeight = 20;
+        var xPos = node.x + sankey.nodeWidth() + 5;
+        var yPos = node.y + node.dy/2 - 12;
+        // For some reason if the imgHeight is less than 20, you may need to subtract a few more pixels from yPos.
+        var newDiv = document.createElement('div');
+        newDiv.setAttribute('style', 'position:absolute; margin-top:'+yPos+'px; margin-left:'+xPos+'px');
+        // newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\"><img src=\"icon10.jpg\" alt=\"Resources\" width=\""+imgWidth+"\" height=\""+imgHeight+"\"></a>";
+        newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\">Resources</a>";
+        document.getElementById('careerLink').appendChild(newDiv);
+      }
+    });
   }
 
   // Should be called after the previous sankey has been erased and after currentData has been updated. 
@@ -330,7 +369,10 @@ d3.json("data.json", function(allData) {
         }
       })
 
-    document.getElementById("description").innerHTML="";
+    document.getElementById("majorDescription").innerHTML="";
+    document.getElementById("careerLink").innerHTML="";
+
+    drawCareerResources();
   }
 
   document.onkeydown = function(event) {
