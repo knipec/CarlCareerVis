@@ -61,9 +61,13 @@
 <script src="sankey.js"></script>
 <script>
 
+
+/* If there are multiple links per career category, the thing after the : should look like
+[["sub-career0","link0"], ["sub-career1","link1"], ...]
+*/
 var careerLinks = {
   "Arts/Museums" : "https://apps.carleton.edu/pathways/arts_communication/",
-  "Business/Finance/Sales: https://apps.carleton.edu/pathways/businesses/",
+  "Business/Finance/Sales" : "https://apps.carleton.edu/pathways/businesses/",
   "Communications/Media" : "https://apps.carleton.edu/pathways/arts_communication/",
   "Education (Higher Ed)" : "https://apps.carleton.edu/pathways/education/higher_education/",
   "Education (Pre K-12)" : "https://apps.carleton.edu/pathways/education/k_12_education/",
@@ -71,9 +75,11 @@ var careerLinks = {
   "Environment/Agriculture" : "https://apps.carleton.edu/pathways/environment/",
   "Government/Public Service" : "https://apps.carleton.edu/pathways/government_law_activism/government_politics_public_policy/",
   "Healthcare" : "https://apps.carleton.edu/pathways/health_wellness/health_professions/",
-  "Info Systems/Technology/Library" : ["https://apps.carleton.edu/pathways/engineering/computers_and_information_systems/", "https://apps.carleton.edu/pathways/education/library_science/"],
+  "Info Systems/Technology/Library" :
+   [["Computers","https://apps.carleton.edu/pathways/engineering/computers_and_information_systems/"], 
+    ["Library Science","https://apps.carleton.edu/pathways/education/library_science/"]],
   "Legal Professions" : "https://apps.carleton.edu/pathways/government_law_activism/law_justice/",
-  "Peace Corps/AmeriCorps/Teach for America" : "https://apps.carleton.edu/pathways/government_law_activism/advocacy_activism_humanrights/",
+  "Peacecorps/Americorps/Teach for America" : "https://apps.carleton.edu/pathways/government_law_activism/advocacy_activism_humanrights/",
   "Science/Lab Research" : "https://apps.carleton.edu/pathways/health_wellness/health_professions/",
   "Social Service/Advocacy" : "https://apps.carleton.edu/pathways/health_wellness/counseling_socialservices/"
   }
@@ -94,7 +100,8 @@ var VIEW_ENTIRE = 0,
 var view = VIEW_ENTIRE;
 
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    width = 960 - margin.left - margin.right,
+    // width = 960 - margin.left - margin.right,
+    width = 880 - margin.left - margin.right,
     height = 1000 - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),
@@ -265,15 +272,31 @@ d3.json("data.json", function(allData) {
     sankey.nodes().forEach(function(node) {
       if (node.x != 0 && careerLinks[node.name] != undefined) {
         // Career nodes
-        var imgWidth = 20, imgHeight = 20;
-        var xPos = node.x + sankey.nodeWidth() + 5;
-        var yPos = node.y + node.dy/2 - 12;
-        // For some reason if the imgHeight is less than 20, you may need to subtract a few more pixels from yPos.
+        var firstDiv = document.createElement('div');
         var newDiv = document.createElement('div');
-        newDiv.setAttribute('style', 'position:absolute; margin-top:'+yPos+'px; margin-left:'+xPos+'px');
-        // newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\"><img src=\"icon10.jpg\" alt=\"Resources\" width=\""+imgWidth+"\" height=\""+imgHeight+"\"></a>";
-        newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\">Resources</a>";
-        document.getElementById('careerLink').appendChild(newDiv);
+        var xPos = node.x + sankey.nodeWidth() + 5;
+        var yPos = node.y + node.dy/2 - 13;
+        // For some reason if the imgHeight is less than 20, you may need to subtract a few more pixels from yPos.
+        // newDiv.setAttribute('style', 'position:absolute; margin-top:'+yPos+'px; margin-left:'+xPos+'px');
+        firstDiv.setAttribute('style', 'position:absolute; margin-top:'+node.y+'px; margin-left:'+xPos+'px; height:'+node.dy+'px; display:table;');
+        newDiv.setAttribute('style', 'display:table-cell; vertical-align:middle;');
+
+        var innerhtml = "";
+        // If there are multiple links per career
+        if (Object.prototype.toString.call(careerLinks[node.name]) === '[object Array]' && careerLinks[node.name].length > 1) {
+          innerhtml += "<p style=\"line-height: 50%\">";
+          for (var i=0; i<careerLinks[node.name].length; i++) {
+            innerhtml = innerhtml + "<a href=\""+careerLinks[node.name][i][1]+"\" style=\"font-size:10px\">See " + careerLinks[node.name][i][0] + " Pathway</a><br>";
+          }
+          innerhtml += "</p>";
+          newDiv.innerHTML = innerhtml
+          var divHeight = newDiv.offsetHeight;
+        }
+        else {
+          newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\" style=\"font-size:10px\">See this Pathway</a>";
+        }
+        firstDiv.appendChild(newDiv);
+        document.getElementById('careerLink').appendChild(firstDiv);     
       }
     });
   }
@@ -312,7 +335,6 @@ d3.json("data.json", function(allData) {
         .attr("class", "node")
         .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 
-
     node.append("rect")
         .attr("height", function(d) { return d.dy; })
         .attr("width", sankey.nodeWidth())
@@ -322,6 +344,15 @@ d3.json("data.json", function(allData) {
         .text(function(d) { return d.name + "\n" + format(d.value); });
 
     node.append("text")
+      //   .attr("x", +60)
+      //   .attr("y", function(d) { return d.dy / 2; })
+      //   .attr("dy", ".35em")
+      //   .attr("text-anchor", "end")
+      //   .attr("transform", null)
+      //   .text(function(d) { return d.name; })
+      // .filter(function(d) { return d.x < width / 2; })
+      //   .attr("x", 6 + sankey.nodeWidth())
+      //   .attr("text-anchor", "start");
         .attr("x", -6)
         .attr("y", function(d) { return d.dy / 2; })
         .attr("dy", ".35em")

@@ -120,6 +120,9 @@ d3.sankey = function() {
     var remainingNodes = nodes,
         nextNodes,
         x = 0;
+    // DERP
+    x = 200;
+    width = width - 200;
 
     while (remainingNodes.length) {
       nextNodes = [];
