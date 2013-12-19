@@ -76,7 +76,7 @@ var careerLinks = {
   "Government/Public Service" : "https://apps.carleton.edu/pathways/government_law_activism/government_politics_public_policy/",
   "Healthcare" : "https://apps.carleton.edu/pathways/health_wellness/health_professions/",
   "Info Systems/Technology/Library" :
-   [["Computers","https://apps.carleton.edu/pathways/engineering/computers_and_information_systems/"], 
+   [["Tech","https://apps.carleton.edu/pathways/engineering/computers_and_information_systems/"], 
     ["Library Science","https://apps.carleton.edu/pathways/education/library_science/"]],
   "Legal Professions" : "https://apps.carleton.edu/pathways/government_law_activism/law_justice/",
   "Peacecorps/Americorps/Teach for America" : "https://apps.carleton.edu/pathways/government_law_activism/advocacy_activism_humanrights/",
@@ -158,12 +158,14 @@ d3.json("data.json", function(allData) {
 
     drawNewSankey(10);
 
-    var careerLink = careerLinks[d3.select(node).datum().name]
+    var careerName = d3.select(node).datum().name;
+    var careerLink = careerLinks[careerName]
     if (careerLink == undefined) {
       document.getElementById("careerLink").innerHTML = "";
     }
     else {
-      document.getElementById("careerLink").innerHTML = "<a href=\"" + careerLink + "\">Link to " + d3.select(node).datum().name + " on Pathways site</a>";
+      drawCareerResources();
+      // document.getElementById("careerLink").innerHTML = "<a href=\"" + careerLink + "\">Link to " + careerName + " on Pathways site</a>";
     }
 
 
@@ -217,6 +219,8 @@ d3.json("data.json", function(allData) {
     }
     document.getElementById("majorDescription").innerHTML = majorText;
 
+    document.getElementById("careerLink").innerHTML = "";    
+
     d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the major or press backspace to go back to the full view.");
 
   }
@@ -240,13 +244,7 @@ d3.json("data.json", function(allData) {
     }
     document.getElementById("majorDescription").innerHTML = majorText;
 
-    var careerLink = careerLinks[d3.select(link).datum().target.name]
-    if (careerLink == undefined) {
-      document.getElementById("careerLink").innerHTML = "";
-    }
-    else {
-      document.getElementById("careerLink").innerHTML = "<a href=\"" + careerLink + "\">Link to " + d3.select(link).datum().target.name + " on Pathways site</a>";
-    }
+    document.getElementById("careerLink").innerHTML = "";
 
     d3.select("body").select("h3").text("Majors on left, job fields (under " + d3.select(link).datum().target.name + ") on right. Click on the major to see all its broad career paths. Press backspace to go to the full view.");
   }
@@ -268,29 +266,28 @@ d3.json("data.json", function(allData) {
 
   }
 
+  // Add the links on the right side of each career
   function drawCareerResources() {
     sankey.nodes().forEach(function(node) {
       if (node.x != 0 && careerLinks[node.name] != undefined) {
-        // Career nodes
         var firstDiv = document.createElement('div');
         var newDiv = document.createElement('div');
         var xPos = node.x + sankey.nodeWidth() + 5;
-        var yPos = node.y + node.dy/2 - 13;
-        // For some reason if the imgHeight is less than 20, you may need to subtract a few more pixels from yPos.
-        // newDiv.setAttribute('style', 'position:absolute; margin-top:'+yPos+'px; margin-left:'+xPos+'px');
-        firstDiv.setAttribute('style', 'position:absolute; margin-top:'+node.y+'px; margin-left:'+xPos+'px; height:'+node.dy+'px; display:table;');
-        newDiv.setAttribute('style', 'display:table-cell; vertical-align:middle;');
+        var yPos = node.y;
+        var height = node.dy;
+
+        firstDiv.setAttribute('style', 'position:absolute; margin-top:'+yPos+'px; margin-left:'+xPos+'px; height:'+height+'px; display:table; border:"1px"');
+        newDiv.setAttribute('style', 'display:table-cell; vertical-align:middle; font-family:"PT Sans",sans-serif;');
 
         var innerhtml = "";
         // If there are multiple links per career
         if (Object.prototype.toString.call(careerLinks[node.name]) === '[object Array]' && careerLinks[node.name].length > 1) {
           innerhtml += "<p style=\"line-height: 50%\">";
           for (var i=0; i<careerLinks[node.name].length; i++) {
-            innerhtml = innerhtml + "<a href=\""+careerLinks[node.name][i][1]+"\" style=\"font-size:10px\">See " + careerLinks[node.name][i][0] + " Pathway</a><br>";
+            innerhtml = innerhtml + "<a href=\""+careerLinks[node.name][i][1]+"\" style=\"font-size:10px\">See " + careerLinks[node.name][i][0] + " Pathway</a><br><br>";
           }
           innerhtml += "</p>";
-          newDiv.innerHTML = innerhtml
-          var divHeight = newDiv.offsetHeight;
+          newDiv.innerHTML = innerhtml;
         }
         else {
           newDiv.innerHTML = "<a href=\""+careerLinks[node.name]+"\" style=\"font-size:10px\">See this Pathway</a>";
