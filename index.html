@@ -148,7 +148,6 @@ d3.json("data.json", function(allData) {
       currentData.nodes.push(link.source);
     });
 
-
     // Delete the previously drawn diagram
     eraseSankey();
 
@@ -202,7 +201,6 @@ d3.json("data.json", function(allData) {
       currentData.nodes.push(link.target);
     });
 
-
     // Delete the previously drawn diagram
     eraseSankey();
 
@@ -218,9 +216,7 @@ d3.json("data.json", function(allData) {
       majorText = ""
     }
     document.getElementById("majorDescription").innerHTML = majorText;
-
     document.getElementById("careerLink").innerHTML = "";    
-
     d3.select("body").select("h3").text("Majors on left, job fields on right. Click on a path to see more specific careers. Click on the major or press backspace to go back to the full view.");
 
   }
@@ -231,7 +227,6 @@ d3.json("data.json", function(allData) {
     var newHeight = 300;
 
     currentData = allData[d3.select(link).datum().index];
-
     eraseSankey();
     sankey
       .size([width, newHeight - margin.top - margin.bottom]);
@@ -243,9 +238,7 @@ d3.json("data.json", function(allData) {
       majorText = ""
     }
     document.getElementById("majorDescription").innerHTML = majorText;
-
     document.getElementById("careerLink").innerHTML = "";
-
     d3.select("body").select("h3").text("Majors on left, job fields (under " + d3.select(link).datum().target.name + ") on right. Click on the major to see all its broad career paths. Press backspace to go to the full view.");
   }
 
@@ -254,9 +247,7 @@ d3.json("data.json", function(allData) {
     window.scroll(0,0);
 
     eraseSankey();
-
     currentData = allData[0];
-
     sankey
       .size([width, height])
 
@@ -341,6 +332,7 @@ d3.json("data.json", function(allData) {
         .text(function(d) { return d.name + "\n" + format(d.value); });
 
     node.append("text")
+      // Before career resources were added to the right side
       //   .attr("x", +60)
       //   .attr("y", function(d) { return d.dy / 2; })
       //   .attr("dy", ".35em")
